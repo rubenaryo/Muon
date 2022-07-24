@@ -25,7 +25,7 @@ public:
             pWindow = (WindowType*)pCreate->lpCreateParams;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pWindow);
 
-            pWindow->m_hwnd = hwnd;
+            pWindow->mHwnd = hwnd;
         }
         else
         {
@@ -40,17 +40,19 @@ public:
     }
 
     // Default constructor initializes to NULL
-    BaseWindow() : m_hwnd(NULL) {};
+    BaseWindow() : mpGame(nullptr), mHwnd(nullptr) {};
 
     // Method to create and register a WNDCLASS
-    BOOL Create(PCWSTR lpWindowName, HINSTANCE hInstance, DWORD dwStyle, DWORD dwExStyle = 0, LONG x = 0, LONG y = 0, LONG nWidth = 800, LONG nHeight = 600, HWND hWndParent = 0, HMENU hMenu = 0);
+    BOOL Create(Core::Game* pGame, PCWSTR lpWindowName, HINSTANCE hInstance, DWORD dwStyle, DWORD dwExStyle = 0, LONG x = 0, LONG y = 0, LONG nWidth = 800, LONG nHeight = 600, HWND hWndParent = 0, HMENU hMenu = 0);
 
     // Accessor for member HWND
-    HWND Window() const { return m_hwnd; }
+    HWND Hwnd() const { return mHwnd; }
 
 protected:
+    Core::Game* mpGame;
+
     // Handle to created window
-    HWND m_hwnd;
+    HWND mHwnd;
 
     // Pure virtual functions that must be derived by any windows
     virtual PCWSTR ClassName() const = 0;
@@ -72,16 +74,16 @@ public:
     void RunGame();
         
 private:
-    // States of the window (used to send messages to directx on resize, move, etc)
-    bool m_ResizeMove   = false;
-    bool m_Suspended  = false;
-    bool m_Minimized  = false;
-    bool m_Fullscreen = false;
+    // States of the window (used to send messages to DirectX on resize, move, etc)
+    bool mResizeMove = false;
+    bool mSuspended  = false;
+    bool mMinimized  = false;
+    bool mFullScreen = false;
 };
 
 // Definition of templated Create Method
 template<class WindowType>
-BOOL BaseWindow<WindowType>::Create(PCWSTR lpWindowName, HINSTANCE hInstance, DWORD dwStyle, DWORD dwExStyle, LONG x, LONG y, LONG nWidth, LONG nHeight, HWND hWndParent, HMENU hMenu)
+BOOL BaseWindow<WindowType>::Create(Core::Game* pGame, PCWSTR lpWindowName, HINSTANCE hInstance, DWORD dwStyle, DWORD dwExStyle, LONG x, LONG y, LONG nWidth, LONG nHeight, HWND hWndParent, HMENU hMenu)
 {
     WNDCLASSEXW wc = {0};
 
@@ -102,15 +104,16 @@ BOOL BaseWindow<WindowType>::Create(PCWSTR lpWindowName, HINSTANCE hInstance, DW
     RECT rc = { x, y, x + nWidth, y + nHeight};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
-    m_hwnd = CreateWindowExW(dwExStyle, ClassName(), lpWindowName, dwStyle, x, y, rc.right - rc.left, rc.bottom - rc.top, hWndParent, hMenu, hInstance, this);
+    mHwnd = CreateWindowExW(dwExStyle, ClassName(), lpWindowName, dwStyle, x, y, rc.right - rc.left, rc.bottom - rc.top, hWndParent, hMenu, hInstance, this);
 
     // Initialize Windows Imaging Component (WIC)
     if (FAILED(CoInitializeEx(NULL, COINITBASE_MULTITHREADED)))
         return FALSE;
 
-    if (m_hwnd)
+    if (mHwnd)
     {
-        return InitGame(m_hwnd, nWidth, nHeight);
+        mpGame = pGame;
+        return InitGame(mHwnd, nWidth, nHeight);
     }
     else
     {

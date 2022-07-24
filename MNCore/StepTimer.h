@@ -192,14 +192,14 @@ private:
     uint64_t m_leftOverTicks;
 
     // Members for tracking the framerate.
+    uint64_t m_qpcSecondCounter;
     uint32_t m_frameCount;
     uint32_t m_framesPerSecond;
     uint32_t m_framesThisSecond;
-    uint64_t m_qpcSecondCounter;
 
     // Members for configuring fixed timestep mode.
-    bool m_isFixedTimeStep;
     uint64_t m_targetElapsedTicks;
+    bool m_isFixedTimeStep;
 };
 }
 #endif

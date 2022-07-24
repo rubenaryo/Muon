@@ -23,9 +23,20 @@ InputSystem::InputSystem()
 // Release all dynamic memory
 InputSystem::~InputSystem()
 {
+}
+
+void InputSystem::Shutdown()
+{
+
     // Release keyMap and clear
     for (auto pair : mKeyMap)
+    {
         delete pair.second;
+        pair.second = nullptr;
+        
+        printf("Deleted %d..\n", pair.first);
+    }
+
     mKeyMap.clear();
 
     // No need to delete dynamic memory from activeKeyMap, it's already deleted in keymap*
@@ -41,7 +52,7 @@ void InputSystem::GetInput()
     GetKeyboardState();
 
     // Update active/non-active keymaps
-    update();
+    Update();
 
     // Update mouse state
     mMousePrevious = mMouseCurrent;
@@ -62,7 +73,7 @@ std::pair<float,float> InputSystem::GetMouseDelta() const
 }
 
 // Clears active key map, then fills it with all values from m_keyMap with a 'fulfilled' chord
-void InputSystem::update()
+void InputSystem::Update()
 {
     // Reset active key map
     mActiveKeyMap.clear();

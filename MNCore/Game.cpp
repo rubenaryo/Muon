@@ -11,19 +11,22 @@ Description : Implementation of Game.h
 namespace Core {
 
 // Initialize device resources, and link up this game to be notified of device updates
-Game::Game() :
-    mInput(GameInput())
+Game::Game()
+    : mInput()
+    , mTimer()
 {
-    mTimer.SetFixedTimeStep(false);
 }
 
 // Initialize device resource holder by creating all necessary resources
-bool Game::Init(HWND window, int width, int height)
+bool Game::Init(HWND hwnd, int width, int height)
 {
-    mHwnd = window;
+    mHwnd = hwnd;
 
     CreateDeviceDependentResources();
     CreateWindowSizeDependentResources(width, height);
+
+    mInput.Init();
+    mTimer.SetFixedTimeStep(false);
 
     return true;
 }
@@ -45,7 +48,6 @@ void Game::Update(StepTimer const& timer)
 
     // Update the input, passing in the camera so it will update its internal information
     mInput.Frame(elapsedTime, NULL);
-
 }
 
 void Game::Render()
@@ -65,6 +67,7 @@ void Game::CreateWindowSizeDependentResources(int newWidth, int newHeight)
 
 void Game::Shutdown()
 {
+    mInput.Shutdown();
 }
 
 Game::~Game()

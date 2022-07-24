@@ -10,7 +10,6 @@ Description : Implementation of Message Loop
 
 namespace System {
 
-    static Core::Game sGame = Core::Game();
 
 LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -18,7 +17,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_MOUSEMOVE:
         POINTS pt = MAKEPOINTS(lParam);
-        sGame.OnMouseMove(pt.x, pt.y);
+        mpGame->OnMouseMove(pt.x, pt.y);
         return 0;
 
     case WM_DESTROY:
@@ -30,33 +29,33 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         // If the window has just been minimized
         if (wParam == SIZE_MINIMIZED)
         {
-            if (!m_Minimized)
+            if (!mMinimized)
             {
                 // Set minimized flag, suspend the game
-                m_Minimized = true;
-                if (!m_Suspended)
-                    sGame.OnSuspending();
-                m_Suspended = true;
+                mMinimized = true;
+                if (!mSuspended)
+                    mpGame->OnSuspending();
+                mSuspended = true;
             }
         }
-        else if (m_Minimized) // if we're minimized already, must be maximizing
+        else if (mMinimized) // if we're minimized already, must be maximizing
         {
             // Set maximized flag, resume the game
-            m_Minimized = false;
-            if (m_Suspended)
-                sGame.OnResuming();
-            m_Suspended = false;
+            mMinimized = false;
+            if (mSuspended)
+                mpGame->OnResuming();
+            mSuspended = false;
         }
         break;
     case WM_ENTERSIZEMOVE:
-        m_ResizeMove = true;
+        mResizeMove = true;
         break;
     case WM_EXITSIZEMOVE:
     {
-        m_ResizeMove = false;
+        mResizeMove = false;
         RECT rc;
-        GetClientRect(m_hwnd, &rc);
-        sGame.OnResize(static_cast<int>(rc.right - rc.left), static_cast<int>(rc.bottom - rc.top));  
+        GetClientRect(mHwnd, &rc);
+        mpGame->OnResize(static_cast<int>(rc.right - rc.left), static_cast<int>(rc.bottom - rc.top));  
     }
     break;
     case WM_GETMINMAXINFO:
@@ -71,24 +70,24 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     break;
     case WM_ACTIVATEAPP:
         if (wParam)
-            sGame.OnActivated();
+            mpGame->OnActivated();
         else
-            sGame.OnDeactivated();
+            mpGame->OnDeactivated();
         break;
     case WM_POWERBROADCAST:
         switch (wParam)
         {
         case PBT_APMQUERYSUSPEND:
-            if (!m_Suspended)
-                sGame.OnSuspending();
-            m_Suspended = true;
+            if (!mSuspended)
+                mpGame->OnSuspending();
+            mSuspended = true;
             return TRUE;
         case PBT_APMRESUMESUSPEND:
-            if (!m_Minimized)
+            if (!mMinimized)
             {
-                if (m_Suspended)
-                    sGame.OnResuming();
-                m_Suspended = false;
+                if (mSuspended)
+                    mpGame->OnResuming();
+                mSuspended = false;
             }
             return TRUE;
         }
@@ -96,7 +95,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_MENUCHAR:
         return MAKELRESULT(0, 1);
     default:
-        return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+        return DefWindowProc(mHwnd, uMsg, wParam, lParam);
     }
     return TRUE;
 }
@@ -107,7 +106,7 @@ bool GameWindow::InitGame(HWND hwnd, int width, int height)
     bool result = false;
     try
     {
-        result = sGame.Init(hwnd, width, height);
+        result = mpGame->Init(hwnd, width, height);
     }
     catch (std::exception const& e)
     {
@@ -134,9 +133,9 @@ void GameWindow::RunGame()
         }
         
         // Process one gameplay frame
-        sGame.Frame();
+        mpGame->Frame();
     }
-    sGame.Shutdown();
+    mpGame->Shutdown();
 }
 
 }

@@ -15,7 +15,9 @@ namespace Core
     public:
         // Default constructor
         GameInput();
-        ~GameInput();
+        virtual ~GameInput();
+
+        void Init();
 
         // Actions run by the input system each frame
         void Frame(float dt, void*);

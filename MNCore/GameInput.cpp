@@ -10,12 +10,18 @@ Description : Implementation of GameInput method overrides
 namespace Core {
 
     GameInput::GameInput()
+        : InputSystem()
     {
-        SetDefaultKeyMap();
     }
 
     GameInput::~GameInput()
-    {}
+    {
+    }
+
+    void GameInput::Init()
+    {
+        SetDefaultKeyMap();
+    }
 
     void GameInput::Frame(float dt, void* pCamera)
     {
@@ -78,14 +84,14 @@ namespace Core {
     {
         mKeyMap.clear();
         mKeyMap[GameCommands::Quit]         = new Chord(L"Quit", VK_ESCAPE, KeyState::JustReleased);
-        mKeyMap[GameCommands::MoveForward]  = new Chord(L"Move Forward", 'W', KeyState::StillPressed);
-        mKeyMap[GameCommands::MoveBackward] = new Chord(L"Move Backward", 'S', KeyState::StillPressed);
-        mKeyMap[GameCommands::MoveLeft]     = new Chord(L"Move Left", 'A', KeyState::StillPressed);
-        mKeyMap[GameCommands::MoveRight]    = new Chord(L"Move Right", 'D', KeyState::StillPressed);
-        mKeyMap[GameCommands::MoveUp]       = new Chord(L"Move Up", VK_SPACE, KeyState::StillPressed);
-        mKeyMap[GameCommands::RollLeft]     = new Chord(L"Roll Left", 'Q', KeyState::StillPressed);
-        mKeyMap[GameCommands::RollRight]    = new Chord(L"Roll Right", 'E', KeyState::StillPressed);
-
-        mKeyMap[GameCommands::CameraRotation] = new Chord(L"Camera Rotation", VK_RBUTTON, KeyState::StillPressed);
+        //mKeyMap[GameCommands::MoveForward]  = new Chord(L"Move Forward", 'W', KeyState::StillPressed);
+        //mKeyMap[GameCommands::MoveBackward] = new Chord(L"Move Backward", 'S', KeyState::StillPressed);
+        //mKeyMap[GameCommands::MoveLeft]     = new Chord(L"Move Left", 'A', KeyState::StillPressed);
+        //mKeyMap[GameCommands::MoveRight]    = new Chord(L"Move Right", 'D', KeyState::StillPressed);
+        //mKeyMap[GameCommands::MoveUp]       = new Chord(L"Move Up", VK_SPACE, KeyState::StillPressed);
+        //mKeyMap[GameCommands::RollLeft]     = new Chord(L"Roll Left", 'Q', KeyState::StillPressed);
+        //mKeyMap[GameCommands::RollRight]    = new Chord(L"Roll Right", 'E', KeyState::StillPressed);
+        //
+        //mKeyMap[GameCommands::CameraRotation] = new Chord(L"Camera Rotation", VK_RBUTTON, KeyState::StillPressed);
     }
 }

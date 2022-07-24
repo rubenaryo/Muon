@@ -15,39 +15,11 @@ namespace Core
 {
     class InputSystem
     {
-    private:
-        // Keyboard States
-        std::array<BYTE, 256> mKeyboardCurrent;
-        std::array<BYTE, 256> mKeyboardPrevious;
-    
-        // Mouse States
-        POINT mMouseCurrent;
-        POINT mMousePrevious;
-    
-        // Uses GetAsyncKeyState to read in 256 bytes
-        void GetKeyboardState();
-    
-        // returns the state of the key in enum form
-        const KeyState GetKeyboardKeyState(const unsigned int keyCode) const;
-    
-        // returns true if the key is down
-        inline const bool isPressed(int keyCode) const
-        {
-            return (GetAsyncKeyState(keyCode) & 0x8000) ? 1 : 0;
-        }
-    
-        void update();
-    
-    protected:
-        std::unordered_map<GameCommands, Chord*> mKeyMap;
-    
-        virtual void SetDefaultKeyMap() = 0;
-    
     public:
         InputSystem();
         virtual ~InputSystem();
-    
-        std::unordered_map<GameCommands, Chord*> mActiveKeyMap;
+
+        void Shutdown();
     
         // Main "Update method" for input system
         void GetInput();
@@ -60,7 +32,34 @@ namespace Core
     
         // Returns the difference between current and previous as a std::pair
         std::pair<float, float> GetMouseDelta() const;
+    private:
+        // Uses GetAsyncKeyState to read in 256 bytes
+        void GetKeyboardState();
     
+        // returns the state of the key in enum form
+        const KeyState GetKeyboardKeyState(const unsigned int keyCode) const;
+    
+        // returns true if the key is down
+        inline const bool isPressed(int keyCode) const
+        {
+            return (GetAsyncKeyState(keyCode) & 0x8000) ? 1 : 0;
+        }
+    
+        void Update();
+
+        // Keyboard States
+        std::array<BYTE, 256> mKeyboardCurrent;
+        std::array<BYTE, 256> mKeyboardPrevious;
+    
+        // Mouse States
+        POINT mMouseCurrent;
+        POINT mMousePrevious;
+
+    protected:
+        std::unordered_map<GameCommands, Chord*> mKeyMap;
+        std::unordered_map<GameCommands, Chord*> mActiveKeyMap;
+    
+        virtual void SetDefaultKeyMap() = 0;
     };
 
 }

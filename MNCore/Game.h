@@ -35,7 +35,6 @@ public:
     // Input Callbacks
     void OnMouseMove(short newX, short newY);
 
-    // Cleanup
     void Shutdown();
 
 private:
