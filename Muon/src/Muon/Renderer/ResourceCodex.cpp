@@ -5,7 +5,7 @@ Description : Master Resource Distributor
 ----------------------------------------------*/
 #include "ResourceCodex.h"
 
-#include <Easel/Core/PathMacros.h>
+#include <Muon/Core/PathMacros.h>
 
 #include "Factories.h"
 #include "Material.h"
@@ -32,7 +32,7 @@ MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDe
     }
     else
     {
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
             OutputDebugStringA("ERROR: Tried to insert repeat mesh\n");
         #endif
         assert(false);

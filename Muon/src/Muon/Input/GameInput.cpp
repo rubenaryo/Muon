@@ -3,7 +3,7 @@ Ruben Young (rubenaryo@gmail.com)
 Date : 2019/11
 Description : Implementation of GameInput method overrides
 ----------------------------------------------*/
-#include <Easel/Core/WinApp.h>
+#include <Muon/Core/WinApp.h>
 
 #include "InputSystem.h"
 #include "GameInput.h"

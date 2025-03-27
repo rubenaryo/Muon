@@ -8,7 +8,7 @@ to be used by the Inputhandling InputSystem class
 #define INPUTBINDING_H
 
 // Preset our windows includes
-#include <Easel/Core/WinApp.h>
+#include <Muon/Core/WinApp.h>
 
 // std inclusions
 #include <string>

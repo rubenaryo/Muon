@@ -123,7 +123,7 @@ private:
     // Pointer to DeviceNotify Interface
     IDeviceNotify* mpDeviceNotify;    
     
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
     ID3DUserDefinedAnnotation*   mpAnnotation;
     ID3D11Debug*                 mpDebugInterface;
 #endif

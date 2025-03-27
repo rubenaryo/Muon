@@ -3,7 +3,7 @@ Ruben Young (rubenaryo@gmail.com)
 Date : 2019/12
 Description : Implementation of Message Loop
 ----------------------------------------------*/
-#include <Easel/Core/Game.h>
+#include <Muon/Core/Game.h>
 
 #include "GameWindow.h"
 
@@ -114,7 +114,7 @@ namespace Core
 
     bool GameWindow::InitGame(HWND hwnd, int width, int height)
     {
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
         bool result = false;
         try
         {

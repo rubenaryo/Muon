@@ -5,12 +5,12 @@ Description : Implementation of Game.h
 ----------------------------------------------*/
 #include "Game.h"
 
-#include <Easel/Input/GameInput.h>
+#include <Muon/Input/GameInput.h>
 
-#include <Easel/Renderer/Camera.h>
-#include <Easel/Renderer/COMException.h>
-#include <Easel/Renderer/LightingManager.h>
-#include <Easel/Renderer/ResourceCodex.h>
+#include <Muon/Renderer/Camera.h>
+#include <Muon/Renderer/COMException.h>
+#include <Muon/Renderer/LightingManager.h>
+#include <Muon/Renderer/ResourceCodex.h>
 
 
 namespace Core
@@ -184,7 +184,7 @@ void Game::OnResize(int newWidth, int newHeight)
     if (!mDeviceResources.WindowSizeChanged(newWidth, newHeight))
         return;
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
         try
         {
             CreateWindowSizeDependentResources(newWidth, newHeight);

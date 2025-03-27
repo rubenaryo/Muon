@@ -6,7 +6,7 @@ Description : Game window header
 #ifndef EASEL_GAMEWINDOW_H
 #define EASEL_GAMEWINDOW_H
 
-#include <Easel.h>
+#include <Muon.h>
 
 #include "AppWindow.h"
 

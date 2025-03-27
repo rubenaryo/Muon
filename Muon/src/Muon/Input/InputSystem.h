@@ -6,7 +6,7 @@ Description : Interface for the InputSystem class
 #ifndef INPUTSYSTEM_H
 #define INPUTSYSTEM_H
 
-#include <Easel/Core/WinApp.h>
+#include <Muon/Core/WinApp.h>
 #include <array>
 #include <unordered_map>
 #include "InputBinding.h"

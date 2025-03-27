@@ -8,10 +8,10 @@ helper macros for reaching certain paths
 #define THROWMACROS_H
 
 #include "COMException.h"
-#include <Easel/Core/PathMacros.h>
+#include <Muon/Core/PathMacros.h>
 
 // helper macro for throwing COM Exceptions. Disabled on Release Builds.
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
     #define COM_EXCEPT(hr) \
         if (FAILED(hr)) \
             throw Renderer::COMException(__LINE__,__FILE__, hr);

@@ -91,7 +91,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
                             assert(pMesh->HasVertexColors(0));
                             memcpy(copyLocation, &(pMesh->mColors[0][j]), sizeof(float) * numComponents);
                             break;
-                        #if defined(ESL_DEBUG)
+                        #if defined(MN_DEBUG)
                         default:
                             OutputDebugStringA("INFO: Unhandled Vertex Shader Input Semantic when parsing Mesh vertices\n");
                         #endif
@@ -104,7 +104,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
             {
                 const aiFace& face = pMesh->mFaces[j];
 
-                #if defined(ESL_DEBUG)
+                #if defined(MN_DEBUG)
                     assert(face.mNumIndices == 3); // Sanity check
                 #endif
 
@@ -128,7 +128,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
             initialVertexData.pSysMem = vertices;
             HRESULT hr = pDevice->CreateBuffer(&vbd, &initialVertexData, &tempMesh.VertexBuffer);
 
-            #if defined(ESL_DEBUG)
+            #if defined(MN_DEBUG)
                 COM_EXCEPT(hr);
             #endif
 
@@ -145,7 +145,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
             tempMesh.IndexCount = numIndices;
             tempMesh.Stride = vertAttr->ByteSize;
 
-            #if defined(ESL_DEBUG)
+            #if defined(MN_DEBUG)
                 COM_EXCEPT(hr);
             #endif
 
@@ -155,7 +155,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
             free(indices);
         }
     }
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     else
     {
         char buf[256];
@@ -190,7 +190,7 @@ void ShaderFactory::LoadAllShaders(ID3D11Device* device, ResourceCodex& codex)
     namespace fs = std::filesystem;
     std::string shaderPath = SHADERPATH;
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     if(!fs::exists(shaderPath))
         throw std::exception("Shaders folder doesn't exist!");
     #endif
@@ -233,7 +233,7 @@ void ShaderFactory::CreateVertexShader(const wchar_t* path, VertexShader* out_sh
 
     COM_EXCEPT(hr);
     
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
         const char debugShaderName[] = "VS_Shader";
         hr = out_shader->Shader->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(debugShaderName) - 1, debugShaderName);
         COM_EXCEPT(hr);
@@ -266,7 +266,7 @@ void ShaderFactory::CreatePixelShader(const wchar_t* path, PixelShader* out_shad
 
     COM_EXCEPT(hr);
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
         const char debugShaderName[] = "PS_Shader";
         hr = out_shader->Shader->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(debugShaderName) - 1, debugShaderName);
         COM_EXCEPT(hr);
@@ -389,7 +389,7 @@ void ShaderFactory::BuildInputLayout(ID3D11ShaderReflection* pReflection, ID3D10
     // Finally, try to create the input layout
     HRESULT hr = device->CreateInputLayout(&allInputParams[0], numInputs, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &out_shader->InputLayout);
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     COM_EXCEPT(hr);
     const char debugNameIL[] = "VS_InputLayout";
     hr = out_shader->InputLayout->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(debugNameIL) - 1, debugNameIL);
@@ -470,7 +470,7 @@ void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* 
     namespace fs = std::filesystem;
     std::string texturePath = TEXTUREPATH;
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     if(!fs::exists(texturePath))
         throw std::exception("Textures folder doesn't exist!");
     #endif
@@ -537,7 +537,7 @@ void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* 
                 slot = (UINT)TextureSlots::CUBE;
                 break;
             default:
-                #if defined(ESL_DEBUG)
+                #if defined(MN_DEBUG)
                     std::wstring debugMsg = L"INFO: Attempted to load a texture with an unrecognized type: ";
                     debugMsg.append(name.c_str());
                     OutputDebugStringW(debugMsg.append(L"\n").c_str());
@@ -548,7 +548,7 @@ void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* 
                 continue;
         }
 
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
         if (pSRV)
         {
             size_t byteSize;
@@ -610,7 +610,7 @@ bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& co
         dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
         device->CreateDepthStencilState(&dsDesc, &skyMaterial.DepthStencilStateOverride);
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
         const char RSdebugName[] = "Sky_RS";
         const char DSdebugName[] = "Sky_DS";
         HRESULT hr = skyMaterial.RasterStateOverride->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(RSdebugName) - 1, RSdebugName);

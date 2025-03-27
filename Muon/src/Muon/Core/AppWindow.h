@@ -6,8 +6,8 @@ Description : Definitions for OO-Window Creation
 #ifndef APPWINDOW_H
 #define APPWINDOW_H
 
-#include <Easel.h>
-#include <Easel/Core/Game.h>
+#include <Muon.h>
+#include <Muon/Core/Game.h>
 
 #include "WinApp.h"
 

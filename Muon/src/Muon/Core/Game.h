@@ -9,9 +9,9 @@ This class encapsulates all app functionality
 
 #include "StepTimer.h"
 
-#include <Easel/Renderer/DeviceResources.h>
-#include <Easel/Renderer/EntityRenderer.h>
-#include <Easel/Renderer/SkyRenderer.h>
+#include <Muon/Renderer/DeviceResources.h>
+#include <Muon/Renderer/EntityRenderer.h>
+#include <Muon/Renderer/SkyRenderer.h>
 
 namespace Renderer
 {

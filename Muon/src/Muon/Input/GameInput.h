@@ -6,7 +6,7 @@ Description : Interface for GameInput child class
 #ifndef GAMEINPUT_H
 #define GAMEINPUT_H
 
-#include <Easel/Renderer/Camera.h>
+#include <Muon/Renderer/Camera.h>
 #include "InputSystem.h"
 
 namespace Input {

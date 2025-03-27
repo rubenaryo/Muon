@@ -29,7 +29,7 @@ Description : Standard includes/ macros for a DirectX 11 app
 
 
 // Debug information
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
     #include <dxgidebug.h>
 #endif
 

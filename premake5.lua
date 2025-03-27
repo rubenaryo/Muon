@@ -1,4 +1,4 @@
-workspace "Easel"
+workspace "Muon"
     architecture "x64"
     startproject "IsoDungeon"
 
@@ -15,8 +15,8 @@ workspace "Easel"
 
 outputdir = "%{cfg.buildcfg}x64"
 
-project "Easel"
-    location "Easel"
+project "Muon"
+    location "Muon"
     kind "SharedLib"
     language "C++"
 
@@ -55,8 +55,8 @@ project "Easel"
 
         defines
         {
-            "ESL_PLATFORM_WINDOWS",
-            "ESL_BUILD_DLL"
+            "MN_PLATFORM_WINDOWS",
+            "MN_BUILD_DLL"
         }
 
         prebuildcommands
@@ -71,13 +71,13 @@ project "Easel"
         }
 
     filter "configurations:Debug"
-        defines "ESL_DEBUG"
+        defines "MN_DEBUG"
         symbols "On"
         staticruntime "Off"
         shadermodel "5.0"
 
     filter "configurations:Release"
-        defines "ESL_RELEASE"
+        defines "MN_RELEASE"
         optimize "On"
         staticruntime "Off"
         shadermodel "5.0"
@@ -98,12 +98,12 @@ project "IsoDungeon"
 
     includedirs
     {
-        "Easel/src"
+        "Muon/src"
     }
 
     links
     {
-        "Easel"
+        "Muon"
     }
 
     filter "system:windows"
@@ -113,15 +113,15 @@ project "IsoDungeon"
 
         defines
         {
-            "ESL_PLATFORM_WINDOWS"
+            "MN_PLATFORM_WINDOWS"
         }
 
     filter "configurations:Debug"
-        defines "ESL_DEBUG"
+        defines "MN_DEBUG"
         symbols "On"
 
     filter "configurations:Release"
-        defines "ESL_RELEASE"
+        defines "MN_RELEASE"
         optimize "On"
 
 project "Shaders"

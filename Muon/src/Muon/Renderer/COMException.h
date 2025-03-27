@@ -6,7 +6,7 @@ Description : Interface for custom COM Exception reporting
 #ifndef COMEXCEPTION_H
 #define COMEXCEPTION_H
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
 #include <windows.h>
 #include <winbase.h>
 #include <string>

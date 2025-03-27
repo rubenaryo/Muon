@@ -18,7 +18,7 @@ Description : Implementation of Renderer class
 #include "SkyRenderer.h"
 #include "ThrowMacros.h"
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
 #include <typeinfo>
 #endif
 

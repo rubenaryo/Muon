@@ -6,7 +6,7 @@ Description : StepTimer Interface, taken from the DirectX Visual Studio Template
 #ifndef STEPTIMER_H
 #define STEPTIMER_H
 
-#include <Easel/Core/WinApp.h>
+#include <Muon/Core/WinApp.h>
 #include <cmath>
 #include <exception>
 #include <stdint.h>
@@ -29,7 +29,7 @@ public:
         m_targetElapsedTicks(TicksPerSecond / 60)
     {
 
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
             if (!QueryPerformanceFrequency(&m_qpcFrequency))
             {
                 throw std::exception("QueryPerformanceFrequency");
@@ -81,7 +81,7 @@ public:
 
     void ResetElapsedTime()
     {
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
         if (!QueryPerformanceCounter(&m_qpcLastTime))
         {
             throw std::exception("QueryPerformanceCounter");
@@ -101,7 +101,7 @@ public:
         // Query the current time.
         LARGE_INTEGER currentTime;
         
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
             if (!QueryPerformanceCounter(&currentTime))
             {
                 throw std::exception("QueryPerformanceCounter");

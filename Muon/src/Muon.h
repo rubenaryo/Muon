@@ -6,10 +6,10 @@ Description : Easel main header
 #ifndef EASEL_EASEL_H
 #define EASEL_EASEL_H
 
-#include <Easel/Core/AppWindow.h>
-#include <Easel/Core/Core.h>
-#include <Easel/Core/GameWindow.h>
-#include <Easel/Core/WinApp.h>
+#include <Muon/Core/AppWindow.h>
+#include <Muon/Core/Core.h>
+#include <Muon/Core/GameWindow.h>
+#include <Muon/Core/WinApp.h>
 
 
 #endif

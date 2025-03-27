@@ -11,7 +11,7 @@ Description : Implementation of DeviceResources.h
 #include "ThrowMacros.h"
 #include <algorithm>
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
 #include <sstream>   // wstringstream
 #include <stdexcept> // std::exception
 #endif
@@ -47,7 +47,7 @@ DeviceResources::DeviceResources(
     ,   mMSAASampleCount   (4)
     ,   mpDeviceNotify     (nullptr)
     ,   mpSwapChain     (nullptr)
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     ,   mpDebugInterface   (nullptr)
     #endif
 {}
@@ -59,7 +59,7 @@ void DeviceResources::CreateDeviceResources()
 {
     UINT createFlags = 0;
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     createFlags |= D3D11_CREATE_DEVICE_DEBUG;
     #endif
 
@@ -77,7 +77,7 @@ void DeviceResources::CreateDeviceResources()
         {
             mDeviceOptions &= ~(uint8_t)DR_OPTIONS::DR_FLIP_PRESENT;
 
-            #if defined(ESL_DEBUG)
+            #if defined(MN_DEBUG)
             OutputDebugStringA("WARNING: Flip swap effects not supported\n");
             #endif
         }
@@ -93,7 +93,7 @@ void DeviceResources::CreateDeviceResources()
         featLevelCount++;
     }
 
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     if (!featLevelCount) throw std::out_of_range("Minimum feature level too high");
     #endif
     // POSSIBLE TODO: Get a hardware adapter
@@ -127,7 +127,7 @@ void DeviceResources::CreateDeviceResources()
             &mpContext
         );
         
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
         OutputDebugStringA("INFO: Falling back to using WARP\n");
         #endif
     }
@@ -164,7 +164,7 @@ void DeviceResources::CreateDeviceResources()
         mDeviceOptions |= (uint8_t)DR_OPTIONS::DR_ENABLE_MSAA;
     }
     
-#if defined(ESL_DEBUG) // Create annotation and debug interface
+#if defined(MN_DEBUG) // Create annotation and debug interface
     // Populate User Defined Annotation Member
     hr = mpContext->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), reinterpret_cast<void**>(&mpAnnotation));
     COM_EXCEPT(hr); //@note: Might be ok to let this fail, and just disable its behavior.
@@ -223,7 +223,7 @@ void DeviceResources::CreateFactory()
 // - Depth Stencil Buffer
 void DeviceResources::CreateWindowSizeDependentResources()
 {
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     if (!mWindow)
         throw std::exception("mWindow member not set!");
     #endif
@@ -291,7 +291,7 @@ void DeviceResources::CreateWindowSizeDependentResources()
 
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
         {
-            #if defined(ESL_DEBUG)
+            #if defined(MN_DEBUG)
             char buf[256];
             sprintf_s(buf, "Device Lost on Resize Buffers: Reason code 0x%08X\n", (hr == DXGI_ERROR_DEVICE_REMOVED) ? mpDevice->GetDeviceRemovedReason() : hr);
             OutputDebugStringA(buf);
@@ -482,7 +482,7 @@ void DeviceResources::CreateWindowSizeDependentResources()
         }
 
         // Set the 3D rendering viewport to target the entire window.
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
         assert(sizeof(FLOAT) == sizeof(backBufferWidth));
         assert(sizeof(FLOAT) == sizeof(backBufferHeight));
         #endif
@@ -549,7 +549,7 @@ void DeviceResources::Present()
     // must recreate all device resources.
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
     {
-        #if defined(ESL_DEBUG)
+        #if defined(MN_DEBUG)
         static char buf[64];
         ZeroMemory(buf, 64);
         sprintf_s(buf, "Device Lost on Present: Reason code 0x%08X\n", (hr == DXGI_ERROR_DEVICE_REMOVED) ? mpDevice->GetDeviceRemovedReason() : hr);
@@ -583,7 +583,7 @@ void DeviceResources::Clear(const FLOAT* backgroundColor)
     mpContext->RSSetViewports(1, &mViewportInfo);
 }
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
 void DeviceResources::ReportLiveDeviceObjects_d()
 {
     mpDebugInterface->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
@@ -650,7 +650,7 @@ void DeviceResources::ReleaseAllComAndDumpLiveObjects()
         mpDevice = nullptr;
     }
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
     if (mpAnnotation)
     {
         mpAnnotation->Release();
@@ -667,7 +667,7 @@ void DeviceResources::ReleaseAllComAndDumpLiveObjects()
 
 DeviceResources::~DeviceResources()
 {
-    #if defined(ESL_DEBUG)
+    #if defined(MN_DEBUG)
     OutputDebugStringA("ENGINE: Shutting Down Rendering System...\n");
     #endif
     ReleaseAllComAndDumpLiveObjects();
@@ -702,7 +702,7 @@ void DeviceResources::UpdateColorSpace()
     // TODO: implement later
 }
 
-#if defined(ESL_DEBUG)
+#if defined(MN_DEBUG)
 void DeviceResources::UpdateTitleBar(uint32_t fps, uint32_t frameCount)
 {
     // Update title bar every 120 frames
