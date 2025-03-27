@@ -1,10 +1,10 @@
 /*----------------------------------------------
 Ruben Young (rubenaryo@gmail.com)
-Date : 2024/5
-Description : Easel main header
+Date : 2025/3
+Description : Muon main header
 ----------------------------------------------*/
-#ifndef EASEL_EASEL_H
-#define EASEL_EASEL_H
+#ifndef MUON_MUON_H
+#define MUON_MUON_H
 
 #include <Muon/Core/AppWindow.h>
 #include <Muon/Core/Core.h>

@@ -3,8 +3,8 @@ Ruben Young (rubenaryo@gmail.com)
 Date : 2024/5
 Description : Game window header
 ----------------------------------------------*/
-#ifndef EASEL_GAMEWINDOW_H
-#define EASEL_GAMEWINDOW_H
+#ifndef MUON_GAMEWINDOW_H
+#define MUON_GAMEWINDOW_H
 
 #include <Muon.h>
 
@@ -13,7 +13,7 @@ Description : Game window header
 namespace Core
 {
     // A derived GameWindow class
-    class EASEL_API GameWindow : public BaseWindow<GameWindow>
+    class MUON_API GameWindow : public BaseWindow<GameWindow>
     {
     public:
         GameWindow();

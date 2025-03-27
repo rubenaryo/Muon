@@ -1,19 +1,19 @@
 /*----------------------------------------------
 Ruben Young (rubenaryo@gmail.com)
-Date : 2024/5
+Date : 2025/3
 Description : Defines DLL import/export macro and other things
 ----------------------------------------------*/
-#ifndef EASEL_CORE_H
-#define EASEL_CORE_H
+#ifndef MUON_CORE_H
+#define MUON_CORE_H
 
 #if defined(MN_PLATFORM_WINDOWS)
     #if defined(MN_BUILD_DLL)
-        #define EASEL_API __declspec(dllexport)
+        #define MUON_API __declspec(dllexport)
     #else
-        #define EASEL_API __declspec(dllimport)
+        #define MUON_API __declspec(dllimport)
     #endif
 #else
-    #error Easel only currently support Windows!
+    #error Muon only currently support Windows!
 #endif
 
 #endif
