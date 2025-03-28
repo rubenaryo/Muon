@@ -61,6 +61,13 @@ bool Game::Init(HWND window, int width, int height)
     return true;
 }
 
+bool Game::InitDX12(HWND window, int width, int height)
+{
+
+
+    return false;
+}
+
 // On Timer tick, run Update() on the game, then Render()
 void Game::Frame()
 {

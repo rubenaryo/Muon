@@ -32,6 +32,8 @@ public:
     ~Game();
     bool Init(HWND window, int width, int height);
 
+    bool InitDX12(HWND window, int width, int height);
+
     // Main Game Loop
     void Frame();
 

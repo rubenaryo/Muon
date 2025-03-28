@@ -11,5 +11,4 @@ Description : Muon main header
 #include <Muon/Core/GameWindow.h>
 #include <Muon/Core/WinApp.h>
 
-
 #endif
