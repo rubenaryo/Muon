@@ -1,7 +1,7 @@
 /*----------------------------------------------
 Ruben Young (rubenaryo@gmail.com)
 Date : 2025/3
-Description : Test Pixel Shader
+Description : Test Vertex Shader
 ----------------------------------------------*/
 struct PSInput
 {
@@ -9,7 +9,12 @@ struct PSInput
     float4 color : COLOR;
 };
 
-float4 main(PSInput input) : SV_TARGET
+PSInput main(float4 position : POSITION, float4 color : COLOR)
 {
-	return input.color;
+    PSInput result;
+
+    result.position = position;
+    result.color = color;
+
+    return result;
 }

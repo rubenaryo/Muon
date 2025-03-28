@@ -56,6 +56,12 @@ namespace Muon
 
     tagRECT gScissorRect;
 
+    // TODO: Move these to the main application and generalize them. 
+    ID3D12RootSignature* gRootSig = nullptr;
+    ID3D12PipelineState* gPipelineState = nullptr;
+    ID3D12Resource* gVertexBuffer = nullptr;
+    D3D12_VERTEX_BUFFER_VIEW gVertexBufferView;
+
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
@@ -424,6 +430,106 @@ namespace Muon
         pCommandList->RSSetScissorRects(1, &gScissorRect);
         return true;
     }
+
+    bool CreateRootSig(ID3D12Device* pDevice, ID3D12RootSignature** out_sig)
+    {
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+        Microsoft::WRL::ComPtr<ID3DBlob> signature;
+        Microsoft::WRL::ComPtr<ID3DBlob> error;
+        HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+        COM_EXCEPT(hr);
+
+        hr = pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(out_sig));
+        COM_EXCEPT(hr);
+
+        return SUCCEEDED(hr);
+    }
+
+    bool LoadShaders(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12RootSignature* pRootSignature, ID3D12PipelineState** out_state)
+    {
+        // Load simple shaders from file
+        static const std::wstring VS_PATH = SHADERPATHW "SimpleVS.cso";
+        static const std::wstring PS_PATH = SHADERPATHW "SimplePS.cso";
+        Microsoft::WRL::ComPtr<ID3DBlob> pVSBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> pPSBlob;
+        HRESULT hr = D3DReadFileToBlob(VS_PATH.c_str(), pVSBlob.GetAddressOf());
+        COM_EXCEPT(hr);
+
+        hr = D3DReadFileToBlob(PS_PATH.c_str(), pPSBlob.GetAddressOf());
+        COM_EXCEPT(hr);
+
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+
+        // Describe and create the graphics pipeline state object (PSO).
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        psoDesc.pRootSignature = pRootSignature;
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(pVSBlob.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPSBlob.Get());
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DepthStencilState.StencilEnable = FALSE;
+        psoDesc.SampleMask = UINT_MAX;
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.SampleDesc.Count = 1;
+
+        hr = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(out_state));
+        COM_EXCEPT(hr);
+
+        return SUCCEEDED(hr);
+    }
+    
+    bool CreateVertexBuffer(ID3D12Device* pDevice, float aspectRatio, D3D12_VERTEX_BUFFER_VIEW* out_vboView, ID3D12Resource** out_vbo)
+    {
+        struct Vertex
+        {
+            float Pos[4];
+            float Col[4];
+        };
+
+        Vertex triangleVertices[] =
+        {
+            { { 0.0f, 0.25f * aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+            { { 0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+            { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+        };
+
+        const UINT vertexBufferSize = sizeof(triangleVertices);
+        HRESULT hr = pDevice->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(out_vbo)
+        );
+        COM_EXCEPT(hr);
+
+        // Copy data into newly created GPU buffer
+        UINT8* pDataBegin;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        hr = (*out_vbo)->Map(0, &readRange, reinterpret_cast<void**>(&pDataBegin));
+        memcpy(pDataBegin, triangleVertices, sizeof(triangleVertices));
+        (*out_vbo)->Unmap(0, nullptr);
+        COM_EXCEPT(hr);
+
+        // Create a vertex buffer view
+        out_vboView->BufferLocation = gVertexBuffer->GetGPUVirtualAddress();
+        out_vboView->StrideInBytes = sizeof(Vertex);
+        out_vboView->SizeInBytes = vertexBufferSize;
+
+        return SUCCEEDED(hr);
+    }
+    
     /////////////////////////////////////////////////////////////////////
 
     bool Initialize(HWND hwnd, int width, int height)
@@ -492,6 +598,16 @@ namespace Muon
 
         success &= SetScissorRects(GetCommandList(), 0, 0, width, height);
         CHECK_SUCCESS(success, "Error: Failed to set scissor rects!");
+
+        // TODO: Move this to the application and generalize it.
+        success &= CreateRootSig(GetDevice(), &gRootSig);
+        CHECK_SUCCESS(success, "Error: Failed to create root signature.");
+
+        success &= LoadShaders(GetDevice(), GetCommandList(), gRootSig, &gPipelineState);
+        CHECK_SUCCESS(success, "Error: Failed to load shaders.");
+
+        success &= CreateVertexBuffer(GetDevice(), (float)width / (float)height, &gVertexBufferView, &gVertexBuffer);
+        CHECK_SUCCESS(success, "Error: Failed create vertex buffer.");
 
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();

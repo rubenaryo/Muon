@@ -65,7 +65,9 @@ bool Game::Init(HWND window, int width, int height)
 
 bool Game::InitDX12(HWND window, int width, int height)
 {
-    return Muon::Initialize(window, width, height);
+    bool success = Muon::Initialize(window, width, height);
+
+    return success;
 }
 
 // On Timer tick, run Update() on the game, then Render()
