@@ -14,12 +14,27 @@ namespace Muon
 		OutputDebugStringA(str);
 	}
 
+	inline void MUON_API Print(const wchar_t* str)
+	{
+		OutputDebugString(str);
+	}
+
 	inline void MUON_API Printf(const char* format, ...)
 	{
 		char buffer[256];
 		va_list ap;
 		va_start(ap, format);
 		vsprintf_s(buffer, 256, format, ap);
+		va_end(ap);
+		Print(buffer);
+	}
+
+	inline void Printf(const wchar_t* format, ...)
+	{
+		wchar_t buffer[256];
+		va_list ap;
+		va_start(ap, format);
+		vswprintf(buffer, 256, format, ap);
 		va_end(ap);
 		Print(buffer);
 	}

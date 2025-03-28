@@ -192,7 +192,7 @@ namespace Muon
                 continue;
 
             MaxSize = desc.DedicatedVideoMemory;
-            //Muon::Printf("Selected GPU:  %s (%u MB)\n", desc.Description, desc.DedicatedVideoMemory >> 20);
+            Muon::Printf("Selected GPU:  %s (%u MB)\n", desc.Description, desc.DedicatedVideoMemory >> 20);
         }
 
         if (pTempDevice.Get() != nullptr)
