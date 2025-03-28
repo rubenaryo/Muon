@@ -12,6 +12,7 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 #include <Muon/Renderer/ThrowMacros.h> // TODO: move to Core?
 
 #include <d3d12.h>
+#include <d3dx12.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <stdint.h>
@@ -21,7 +22,7 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 do {                                \
     if (!s)                         \
     {                               \
-        Muon::Print(msg);    \
+        Muon::Print(msg);           \
     }                               \
 } while (0)                         \
 
@@ -42,9 +43,11 @@ namespace Muon
 
     DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    const int SwapChainBufferCount = 2;
+    const int SWAP_CHAIN_BUFFER_COUNT = 2;
+    int CurrentBackBuffer = 0;
 
-    ID3D12Resource* gSwapChainBuffers[SwapChainBufferCount] = {0};
+    IDXGISwapChain* gSwapChain = nullptr;
+    ID3D12Resource* gSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT] = {0};
     ID3D12Resource* gDepthStencilBuffer = nullptr;
 
     ID3D12DescriptorHeap* gRTVHeap = nullptr;
@@ -52,6 +55,7 @@ namespace Muon
 
     /////////////////////////////////////////////////////////////////////
     // Accessors
+
     ID3D12Device* GetDevice() { return gDevice; }
     ID3D12Fence* GetFence() { return gFence; }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
@@ -64,6 +68,22 @@ namespace Muon
     DXGI_FORMAT GetBackBufferFormat() { return BackBufferFormat; }
     DXGI_FORMAT GetDepthStencilFormat() { return DepthStencilFormat; }
 
+    /////////////////////////////////////////////////////////////////////
+    /// Interface Utility Functions
+
+    D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()
+    {
+        return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+            gRTVHeap->GetCPUDescriptorHandleForHeapStart(),
+            CurrentBackBuffer,
+            gRTVSize
+        );
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()
+    {
+        return gDSVHeap->GetCPUDescriptorHandleForHeapStart();
+    }
 
     /////////////////////////////////////////////////////////////////////
     /// Init Steps
@@ -252,7 +272,7 @@ namespace Muon
         sd.SampleDesc.Count = 4; // TODO: Currently assume 4xMSAA is supported..
         sd.SampleDesc.Quality = GetMSAAQualityLevel();
         sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        sd.BufferCount = SwapChainBufferCount;
+        sd.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
         sd.OutputWindow = hwnd;
         sd.Windowed = true;
         sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -270,7 +290,7 @@ namespace Muon
     bool CreateDescriptorHeaps(ID3D12Device* pDevice, ID3D12DescriptorHeap** out_rtv, ID3D12DescriptorHeap** out_dsv)
     {
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
-        rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
+        rtvHeapDesc.NumDescriptors = SWAP_CHAIN_BUFFER_COUNT;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         rtvHeapDesc.NodeMask = 0;
@@ -291,9 +311,19 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateRenderTargetView(ID3D12Device* pDevice)
+    bool CreateRenderTargetView(ID3D12Device* pDevice, IDXGISwapChain* pSwapChain, ID3D12Resource* pSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT])
     {
-        // TODO
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart());
+        HRESULT hr;
+        for (UINT i = 0; i != SWAP_CHAIN_BUFFER_COUNT; ++i)
+        {
+            hr = pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pSwapChainBuffers[i]));
+            COM_EXCEPT(hr);
+
+            pDevice->CreateRenderTargetView(pSwapChainBuffers[i], nullptr, rtvHandle);
+            rtvHandle.Offset(1, gRTVSize);
+        }
+
         return true;
     }
     /////////////////////////////////////////////////////////////////////
