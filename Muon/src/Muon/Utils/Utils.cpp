@@ -29,7 +29,7 @@ namespace Muon
 		Print(buffer);
 	}
 
-	inline void Printf(const wchar_t* format, ...)
+	inline void MUON_API Printf(const wchar_t* format, ...)
 	{
 		wchar_t buffer[256];
 		va_list ap;
