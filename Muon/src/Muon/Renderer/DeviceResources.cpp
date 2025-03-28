@@ -223,13 +223,18 @@ void DeviceResources::CreateFactory()
 // - Depth Stencil Buffer
 void DeviceResources::CreateWindowSizeDependentResources()
 {
+    return;
+
     #if defined(MN_DEBUG)
     if (!mWindow)
-        throw std::exception("mWindow member not set!");
+    {
+
+    }
     #endif
 
     // Clear current window dependent fields.
-    mpContext->OMSetRenderTargets(0, NULL, NULL);  // Reset bound render targets
+    if (mpContext)
+        mpContext->OMSetRenderTargets(0, NULL, NULL);  // Reset bound render targets
 
     #pragma region Cleanup COM Objects
     if (mpRenderTargetView)
@@ -267,7 +272,9 @@ void DeviceResources::CreateWindowSizeDependentResources()
         mpDepthStencilTex->Release();
         mpDepthStencilTex = nullptr;
     }
-    mpContext->Flush();
+
+    if (mpContext)
+        mpContext->Flush();
     #pragma endregion
 
     // Find the height of the render target, using std::max to ensure neither dimension is 0

@@ -32,6 +32,8 @@ namespace Muon
     ID3D12Device* gDevice = nullptr;
 
     ID3D12Fence* gFence = nullptr;
+    UINT64 gFenceVal = 0;
+    HANDLE gFenceEvt = nullptr;
 
     UINT gRTVSize = 0;
     UINT gDSVSize = 0;
@@ -47,9 +49,11 @@ namespace Muon
     const int SWAP_CHAIN_BUFFER_COUNT = 2;
     int CurrentBackBuffer = 0;
 
-    IDXGISwapChain* gSwapChain = nullptr;
+    Microsoft::WRL::ComPtr<IDXGISwapChain3> gSwapChain = nullptr;
     ID3D12Resource* gSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT] = {0};
     ID3D12Resource* gDepthStencilBuffer = nullptr;
+
+    D3D12_VIEWPORT gViewport = {0};
 
     ID3D12DescriptorHeap* gRTVHeap = nullptr;
     ID3D12DescriptorHeap* gDSVHeap = nullptr;
@@ -74,7 +78,7 @@ namespace Muon
     ID3D12CommandQueue* GetCommandQueue() { return gCommandQueue; }
     ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator; }
     ID3D12GraphicsCommandList* GetCommandList() { return gCommandList; }
-    IDXGISwapChain* GetSwapChain() { return gSwapChain; }
+    IDXGISwapChain3* GetSwapChain() { return gSwapChain.Get(); }
     DXGI_FORMAT GetBackBufferFormat() { return BackBufferFormat; }
     DXGI_FORMAT GetDepthStencilFormat() { return DepthStencilFormat; }
 
@@ -144,7 +148,7 @@ namespace Muon
 
             DXGI_INFO_QUEUE_MESSAGE_ID hide[] =
             {
-                80 /* IDXGISwapChain::GetContainingOutput: The swapchain's adapter does not control the output on which the swapchain's window resides. */,
+                80 /* IDXGISwapChain33::GetContainingOutput: The swapchain's adapter does not control the output on which the swapchain's window resides. */,
             };
             DXGI_INFO_QUEUE_FILTER filter = {};
             filter.DenyList.NumIDs = _countof(hide);
@@ -209,6 +213,15 @@ namespace Muon
         HRESULT hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(out_fence));
         COM_EXCEPT(hr);
 
+        gFenceVal = 1;
+        gFenceEvt = CreateEvent(nullptr, false, false, nullptr);
+        if (!gFenceEvt)
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            COM_EXCEPT(hr);
+        }
+
+        WaitForPreviousFrame();
         return SUCCEEDED(hr);
     }
 
@@ -273,33 +286,38 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateSwapChain(ID3D12Device* pDevice, IDXGIFactory6* pFactory, ID3D12CommandQueue* pQueue, HWND hwnd, int width, int height, IDXGISwapChain** out_swapchain)
+    bool CreateSwapChain(ID3D12Device* pDevice, IDXGIFactory6* pFactory, ID3D12CommandQueue* pQueue, HWND hwnd, int width, int height, Microsoft::WRL::ComPtr<IDXGISwapChain3>& out_swapchain)
     {
         // Release the previous swapchain we will be recreating.
         //mSwapChain.Reset();
 
-        DXGI_SWAP_CHAIN_DESC sd;
-        sd.BufferDesc.Width = width;
-        sd.BufferDesc.Height = height;
-        sd.BufferDesc.RefreshRate.Numerator = 60; // TODO: higher refresh rates
-        sd.BufferDesc.RefreshRate.Denominator = 1;
-        sd.BufferDesc.Format = GetBackBufferFormat();
-        sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-        sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        sd.SampleDesc.Count = 1; // TODO: Currently assume 4xMSAA is supported..
-        sd.SampleDesc.Quality = GetMSAAQualityLevel();
-        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        DXGI_SWAP_CHAIN_DESC1 sd = { 0 };
         sd.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
-        sd.OutputWindow = hwnd;
-        sd.Windowed = true;
+        sd.Width = width;
+        sd.Height = height;
+        sd.Format = BackBufferFormat;
+        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+        sd.SampleDesc.Count = 1;
 
         // Note: Swap chain uses queue to perform flush.
-        HRESULT hr = pFactory->CreateSwapChain(
+        //HRESULT hr = pFactory->CreateSwapChain(
+        //    pQueue,
+        //    &sd,
+        //    out_swapchain);
+        Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
+        HRESULT hr = pFactory->CreateSwapChainForHwnd(
             pQueue,
+            hwnd,
             &sd,
-            out_swapchain);
+            nullptr,
+            nullptr,
+            &swapChain
+        );
+        COM_EXCEPT(hr);
+
+        hr = swapChain.As(&out_swapchain);
+        CurrentBackBuffer = out_swapchain->GetCurrentBackBufferIndex();
 
         return SUCCEEDED(hr);
     }
@@ -328,7 +346,7 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateRenderTargetView(ID3D12Device* pDevice, IDXGISwapChain* pSwapChain, ID3D12Resource* pSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT])
+    bool CreateRenderTargetView(ID3D12Device* pDevice, IDXGISwapChain3* pSwapChain, ID3D12Resource* pSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT])
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart());
         HRESULT hr;
@@ -406,7 +424,7 @@ namespace Muon
             return false;
         }
 
-        D3D12_VIEWPORT vp;
+        D3D12_VIEWPORT& vp = gViewport;
         vp.TopLeftX = (float)x;
         vp.TopLeftY = (float)y;
         vp.Width = (float)width;
@@ -492,7 +510,7 @@ namespace Muon
     {
         struct Vertex
         {
-            float Pos[4];
+            float Pos[3];
             float Col[4];
         };
 
@@ -532,6 +550,82 @@ namespace Muon
     
     /////////////////////////////////////////////////////////////////////
 
+    bool PopulateCommandList()
+    {
+        ID3D12CommandAllocator* pAllocator = GetCommandAllocator();
+        ID3D12GraphicsCommandList* pCommandList = GetCommandList();
+
+        if (!pAllocator || !pCommandList)
+            return false;
+
+        HRESULT hr = pAllocator->Reset();
+        COM_EXCEPT(hr);
+
+        hr = pCommandList->Reset(pAllocator, gPipelineState);
+        COM_EXCEPT(hr);
+
+        pCommandList->SetGraphicsRootSignature(gRootSig);
+        pCommandList->RSSetViewports(1, &gViewport);
+        pCommandList->RSSetScissorRects(1, &gScissorRect);
+
+        // Set back buffer as render target
+        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart(), CurrentBackBuffer, gRTVSize);
+        pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+        // Record commands
+        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+        pCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+        pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        pCommandList->IASetVertexBuffers(0, 1, &gVertexBufferView);
+        pCommandList->DrawInstanced(3, 1, 0, 0);
+
+        // Now set back buffer as present target
+        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+        hr = pCommandList->Close();
+
+        return SUCCEEDED(hr);
+    }
+
+    bool ExecuteCommandList()
+    {
+        if (!GetCommandList())
+            return false;
+
+        ID3D12CommandList* lists[] = { GetCommandList() };
+        GetCommandQueue()->ExecuteCommandLists(_countof(lists), lists);
+        return true;
+    }
+
+    bool Present()
+    {
+        if (!GetSwapChain())
+            return false;
+
+        HRESULT hr = GetSwapChain()->Present(1, 0);
+        return SUCCEEDED(hr);
+    }
+
+    // This is not good but just doing this for testing DX12 Initialization...
+    bool WaitForPreviousFrame()
+    {
+        const UINT64 currFence = gFenceVal;
+        HRESULT hr = GetCommandQueue()->Signal(gFence, currFence);
+        gFenceVal++;
+
+        if (gFence->GetCompletedValue() < currFence)
+        {
+            hr = gFence->SetEventOnCompletion(currFence, gFenceEvt);
+            WaitForSingleObject(gFenceEvt, INFINITE);
+        }
+
+        CurrentBackBuffer = GetSwapChain()->GetCurrentBackBufferIndex();
+
+        return SUCCEEDED(hr);
+    }
+
     bool Initialize(HWND hwnd, int width, int height)
     {
         using Microsoft::WRL::ComPtr;
@@ -568,9 +662,6 @@ namespace Muon
             gDevice->Release();
     
         gDevice = pDevice.Detach();
-    
-        success &= CreateFence(GetDevice(), &gFence);
-        CHECK_SUCCESS(success, "Error: Failed to create fence!");
 
         success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
         CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!");
@@ -581,8 +672,11 @@ namespace Muon
         success &= CreateCommandObjects(GetDevice(), &gCommandQueue, &gCommandAllocator, &gCommandList);
         CHECK_SUCCESS(success, "Error: Failed to create command objects!");
 
-        success &= CreateSwapChain(GetDevice(), dxgiFactory.Get(), GetCommandQueue(), hwnd, width, height, &gSwapChain);
+        success &= CreateSwapChain(GetDevice(), dxgiFactory.Get(), GetCommandQueue(), hwnd, width, height, gSwapChain);
         CHECK_SUCCESS(success, "Error: Failed to create swap chain!");
+
+        success &= CreateFence(GetDevice(), &gFence);
+        CHECK_SUCCESS(success, "Error: Failed to create fence!");
 
         success &= CreateDescriptorHeaps(GetDevice(), &gRTVHeap, &gDSVHeap);
         CHECK_SUCCESS(success, "Error: Failed to create descriptor heaps!");
@@ -613,8 +707,7 @@ namespace Muon
         hr = GetCommandList()->Close();
         COM_EXCEPT(hr);
 
-        ID3D12CommandList* lists[] = { GetCommandList() };
-        GetCommandQueue()->ExecuteCommandLists(_countof(lists), lists);
+        ExecuteCommandList();
     
         return success;
     }

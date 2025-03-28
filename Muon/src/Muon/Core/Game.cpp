@@ -114,6 +114,11 @@ void Game::Render()
         return;
     }
 
+    Muon::PopulateCommandList();
+    Muon::ExecuteCommandList();
+    Muon::Present();
+    Muon::WaitForPreviousFrame();
+
 #if USE_DX11
     auto context = mDeviceResources.GetContext();
 

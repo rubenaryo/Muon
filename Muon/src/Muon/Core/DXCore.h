@@ -20,6 +20,11 @@ namespace Muon
 	ID3D12CommandQueue* GetCommandQueue();
 	ID3D12Fence* GetFence();
 
+	bool PopulateCommandList();
+	bool ExecuteCommandList();
+	bool Present();
+	bool WaitForPreviousFrame();
+
 	bool Initialize(HWND hwnd, int width, int height);
 }
 

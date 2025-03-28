@@ -88,7 +88,7 @@ private:
     // Direct3D Objects (COM RefCounted)
     IDXGIFactory*                mpDXGIFactory;
     ID3D11Device*                mpDevice;
-    ID3D11DeviceContext*         mpContext;
+    ID3D11DeviceContext*         mpContext = nullptr;
     IDXGISwapChain*              mpSwapChain;
     UINT                         mPresentFlags;
 
