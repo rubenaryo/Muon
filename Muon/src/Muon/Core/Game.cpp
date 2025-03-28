@@ -5,6 +5,7 @@ Description : Implementation of Game.h
 ----------------------------------------------*/
 #include "Game.h"
 
+#include <Muon/Core/DXCore.h>
 #include <Muon/Input/GameInput.h>
 
 #include <Muon/Renderer/Camera.h>
@@ -63,9 +64,7 @@ bool Game::Init(HWND window, int width, int height)
 
 bool Game::InitDX12(HWND window, int width, int height)
 {
-
-
-    return false;
+    return Muon::Initialize(window, width, height);
 }
 
 // On Timer tick, run Update() on the game, then Render()
@@ -91,6 +90,7 @@ void Game::Update(StepTimer const& timer)
     auto context = mDeviceResources.GetContext();
 
     // Update the camera's view matrix
+
     mpCamera->UpdateView(context);
 
     // Update the lights (if needed)

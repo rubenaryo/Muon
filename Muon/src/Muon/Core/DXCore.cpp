@@ -22,7 +22,8 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 do {                                \
     if (!s)                         \
     {                               \
-        Muon::Print(msg);           \
+        Muon::Print(msg "\n");      \
+        return false;               \
     }                               \
 } while (0)                         \
 
@@ -53,6 +54,8 @@ namespace Muon
     ID3D12DescriptorHeap* gRTVHeap = nullptr;
     ID3D12DescriptorHeap* gDSVHeap = nullptr;
 
+    tagRECT gScissorRect;
+
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
@@ -65,6 +68,7 @@ namespace Muon
     ID3D12CommandQueue* GetCommandQueue() { return gCommandQueue; }
     ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator; }
     ID3D12GraphicsCommandList* GetCommandList() { return gCommandList; }
+    IDXGISwapChain* GetSwapChain() { return gSwapChain; }
     DXGI_FORMAT GetBackBufferFormat() { return BackBufferFormat; }
     DXGI_FORMAT GetDepthStencilFormat() { return DepthStencilFormat; }
 
@@ -145,27 +149,30 @@ namespace Muon
         return true;
     }
 
-    bool CreateAdapterAndDevice(IDXGIFactory6* pFactory, Microsoft::WRL::ComPtr<IDXGIAdapter1>& out_adapter, Microsoft::WRL::ComPtr<ID3D12Device> out_device)
+    bool CreateDevice(IDXGIFactory6* pFactory, Microsoft::WRL::ComPtr<ID3D12Device>& out_device)
     {
+        Microsoft::WRL::ComPtr<IDXGIAdapter1> pAdapter;
+        Microsoft::WRL::ComPtr<ID3D12Device> pTempDevice;
         SIZE_T MaxSize = 0;
 
-        for (uint32_t Idx = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(Idx, &out_adapter); ++Idx)
+        // Determine best adapter and device
+        for (uint32_t Idx = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(Idx, pAdapter.GetAddressOf()); ++Idx)
         {
             DXGI_ADAPTER_DESC1 desc;
-            out_adapter->GetDesc1(&desc);
+            pAdapter->GetDesc1(&desc);
 
             // Is a software adapter?
             if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
                 continue;
 
             // Can create a D3D12 device?
-            if (FAILED(D3D12CreateDevice(out_adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&out_device))))
+            if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(pTempDevice.GetAddressOf()))))
             {
                 Muon::Print("Error: Failed to create device!");
                 continue;
             }
 
-            if (!IsDirectXRaytracingSupported(out_device.Get()))
+            if (!IsDirectXRaytracingSupported(pTempDevice.Get()))
             {
                 Muon::Print("Warning: Found device does NOT support DXR raytracing.");
             }
@@ -178,7 +185,11 @@ namespace Muon
             //Muon::Printf("Selected GPU:  %s (%u MB)\n", desc.Description, desc.DedicatedVideoMemory >> 20);
         }
 
-        return out_device.Get() != nullptr && out_adapter.Get() != nullptr;
+        if (pTempDevice.Get() != nullptr)
+        {
+            out_device = pTempDevice.Detach();
+        }
+        return out_device.Get() != nullptr;
     }
 
     bool CreateFence(ID3D12Device* pDevice, ID3D12Fence** out_fence)
@@ -209,7 +220,7 @@ namespace Muon
         return true;
     }
 
-    bool GetMSAAQualityLevel(ID3D12Device* pDevice, UINT* out_quality)
+    bool DetermineMSAAQuality(ID3D12Device* pDevice, UINT* out_quality)
     {
         D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
         msQualityLevels.Format = GetBackBufferFormat();
@@ -269,7 +280,7 @@ namespace Muon
         sd.BufferDesc.Format = GetBackBufferFormat();
         sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
         sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        sd.SampleDesc.Count = 4; // TODO: Currently assume 4xMSAA is supported..
+        sd.SampleDesc.Count = 1; // TODO: Currently assume 4xMSAA is supported..
         sd.SampleDesc.Quality = GetMSAAQualityLevel();
         sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         sd.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
@@ -326,6 +337,96 @@ namespace Muon
 
         return true;
     }
+    
+    bool CreateDepthStencilBuffer(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12CommandQueue* pCommandQueue, int width, int height, ID3D12Resource** out_depthStencilBuffer)
+    {
+        if (!pDevice || !pCommandList)
+        {
+            Muon::Print("Error: Failed to create depth stencil buffer! Null device or command list");
+            return false;
+        }
+
+        D3D12_RESOURCE_DESC depthStencilDesc;
+        depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Alignment = 0;
+        depthStencilDesc.Width = width;
+        depthStencilDesc.Height = height;
+        depthStencilDesc.DepthOrArraySize = 1;
+        depthStencilDesc.MipLevels = 1;
+        depthStencilDesc.SampleDesc.Count = 1; // TODO: assuming 4xMSAA
+        depthStencilDesc.SampleDesc.Quality = GetMSAAQualityLevel();
+        depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+        depthStencilDesc.Format = DepthStencilFormat;
+
+        D3D12_CLEAR_VALUE optClear;
+        optClear.Format = DepthStencilFormat;
+        optClear.DepthStencil.Depth = 1.0f;
+        optClear.DepthStencil.Stencil = 0;
+        HRESULT hr = pDevice->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &depthStencilDesc,
+            D3D12_RESOURCE_STATE_COMMON,
+            &optClear,
+            IID_PPV_ARGS(out_depthStencilBuffer));
+        COM_EXCEPT(hr);
+
+        // Create a depth stencil view
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsvDesc.Format = DepthStencilFormat;
+        dsvDesc.Texture2D.MipSlice = 0;
+        pDevice->CreateDepthStencilView(*out_depthStencilBuffer, &dsvDesc, DepthStencilView());
+
+        // Trnasition from initial -> depth buffer use
+        pCommandList->ResourceBarrier(1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(*out_depthStencilBuffer, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+
+        //hr = pCommandList->Close();
+        //COM_EXCEPT(hr);
+
+        ID3D12CommandList* lists[] = { pCommandList };
+        pCommandQueue->ExecuteCommandLists(_countof(lists), lists);
+
+        // TODO: Flush command queue?
+
+        return SUCCEEDED(hr);
+    }
+    
+    bool SetViewport(ID3D12GraphicsCommandList* pCommandList, int x, int y, int width, int height, float minDepth, float maxDepth)
+    {
+        if (!pCommandList)
+        {
+            Muon::Print("Error: Failed to set viewport due to null command list!");
+            return false;
+        }
+
+        D3D12_VIEWPORT vp;
+        vp.TopLeftX = (float)x;
+        vp.TopLeftY = (float)y;
+        vp.Width = (float)width;
+        vp.Height = (float)height;
+        vp.MinDepth = minDepth;
+        vp.MaxDepth = maxDepth;
+
+        pCommandList->RSSetViewports(1, &vp);
+        return true;
+    }
+    
+    bool SetScissorRects(ID3D12GraphicsCommandList* pCommandList, long left, long top, long right, long bottom)
+    {
+        if (!pCommandList)
+            return false;
+
+        gScissorRect.left = left;
+        gScissorRect.top = top;
+        gScissorRect.right = right;
+        gScissorRect.bottom = bottom;
+        pCommandList->RSSetScissorRects(1, &gScissorRect);
+        return true;
+    }
     /////////////////////////////////////////////////////////////////////
 
     bool Initialize(HWND hwnd, int width, int height)
@@ -350,10 +451,9 @@ namespace Muon
         COM_EXCEPT(hr);
     
         D3D12EnableExperimentalFeatures(0, nullptr, nullptr, nullptr);
-        ComPtr<IDXGIAdapter1> pAdapter;
     
-        success = CreateAdapterAndDevice(dxgiFactory.Get(), pAdapter, pDevice);
-        CHECK_SUCCESS(success, "Error: Failed to create DX12 Adapter and Device!");
+        success = CreateDevice(dxgiFactory.Get(), pDevice);
+        CHECK_SUCCESS(success, "Error: Failed to create DX12 Device!");
     
         if (!pDevice)
         {
@@ -366,9 +466,37 @@ namespace Muon
     
         gDevice = pDevice.Detach();
     
-        
+        success &= CreateFence(GetDevice(), &gFence);
+        CHECK_SUCCESS(success, "Error: Failed to create fence!");
+
+        success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
+        CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!");
+
+        //success &= DetermineMSAAQuality(GetDevice(), &gMSAAQuality);
+        //CHECK_SUCCESS(success, "Error: Failed to determine MSAA quality!");
+
+        success &= CreateCommandObjects(GetDevice(), &gCommandQueue, &gCommandAllocator, &gCommandList);
+        CHECK_SUCCESS(success, "Error: Failed to create command objects!");
+
+        success &= CreateSwapChain(GetDevice(), dxgiFactory.Get(), GetCommandQueue(), hwnd, width, height, &gSwapChain);
+        CHECK_SUCCESS(success, "Error: Failed to create swap chain!");
+
+        success &= CreateDescriptorHeaps(GetDevice(), &gRTVHeap, &gDSVHeap);
+        CHECK_SUCCESS(success, "Error: Failed to create descriptor heaps!");
+
+        success &= CreateRenderTargetView(GetDevice(), GetSwapChain(), gSwapChainBuffers);
+        CHECK_SUCCESS(success, "Error: Failed to create render target view!");
+
+        success &= CreateDepthStencilBuffer(GetDevice(), GetCommandList(), GetCommandQueue(), width, height, &gDepthStencilBuffer);
+        CHECK_SUCCESS(success, "Error: Failed to create depth stencil buffer!");
+
+        success &= SetViewport(GetCommandList(), 0, 0, width, height, 0.001f, 1000.0f);
+        CHECK_SUCCESS(success, "Error: Failed to set viewport!");
+
+        success &= SetScissorRects(GetCommandList(), 0, 0, width, height);
+        CHECK_SUCCESS(success, "Error: Failed to set scissor rects!");
     
-        return true;
+        return success;
     }
 
 #undef CHECK_SUCCESS
