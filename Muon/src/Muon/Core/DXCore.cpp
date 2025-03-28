@@ -22,7 +22,7 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 do {                                \
     if (!s)                         \
     {                               \
-        Muon::Print(msg "\n");      \
+        Muon::Print(msg);           \
         return false;               \
     }                               \
 } while (0)                         \
@@ -178,13 +178,13 @@ namespace Muon
             // Can create a D3D12 device?
             if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(pTempDevice.GetAddressOf()))))
             {
-                Muon::Print("Error: Failed to create device!");
+                Muon::Print("Error: Failed to create device!\n");
                 continue;
             }
 
             if (!IsDirectXRaytracingSupported(pTempDevice.Get()))
             {
-                Muon::Print("Warning: Found device does NOT support DXR raytracing.");
+                Muon::Print("Warning: Found device does NOT support DXR raytracing.\n");
             }
 
             // By default, search for the adapter with the most memory because that's usually the dGPU.
@@ -206,7 +206,7 @@ namespace Muon
     {
         if (!pDevice)
         {
-            Muon::Print("Failed to create fence because of null device!");
+            Muon::Print("Failed to create fence because of null device!\n");
             return false;
         }
 
@@ -229,7 +229,7 @@ namespace Muon
     {
         if (!pDevice)
         {
-            Muon::Print("Failed to get descriptor sizes because of null device!");
+            Muon::Print("Failed to get descriptor sizes because of null device!\n");
             return false;
         }
 
@@ -366,7 +366,7 @@ namespace Muon
     {
         if (!pDevice || !pCommandList)
         {
-            Muon::Print("Error: Failed to create depth stencil buffer! Null device or command list");
+            Muon::Print("Error: Failed to create depth stencil buffer! Null device or command list\n");
             return false;
         }
 
@@ -420,7 +420,7 @@ namespace Muon
     {
         if (!pCommandList)
         {
-            Muon::Print("Error: Failed to set viewport due to null command list!");
+            Muon::Print("Error: Failed to set viewport due to null command list!\n");
             return false;
         }
 
@@ -639,7 +639,7 @@ namespace Muon
         if (debugMode)
         {
             success = EnableDX12DebugFeatures(dxgiFactoryFlags);
-            CHECK_SUCCESS(success, "Warning: Failed to enable DX12 Debug Features!");
+            CHECK_SUCCESS(success, "Warning: Failed to enable DX12 Debug Features!\n");
         }
     
         // Obtain the DXGI factory
@@ -650,7 +650,7 @@ namespace Muon
         D3D12EnableExperimentalFeatures(0, nullptr, nullptr, nullptr);
     
         success = CreateDevice(dxgiFactory.Get(), pDevice);
-        CHECK_SUCCESS(success, "Error: Failed to create DX12 Device!");
+        CHECK_SUCCESS(success, "Error: Failed to create DX12 Device!\n");
     
         if (!pDevice)
         {
@@ -664,44 +664,44 @@ namespace Muon
         gDevice = pDevice.Detach();
 
         success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
-        CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!");
+        CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!\n");
 
         //success &= DetermineMSAAQuality(GetDevice(), &gMSAAQuality);
         //CHECK_SUCCESS(success, "Error: Failed to determine MSAA quality!");
 
         success &= CreateCommandObjects(GetDevice(), &gCommandQueue, &gCommandAllocator, &gCommandList);
-        CHECK_SUCCESS(success, "Error: Failed to create command objects!");
+        CHECK_SUCCESS(success, "Error: Failed to create command objects!\n");
 
         success &= CreateSwapChain(GetDevice(), dxgiFactory.Get(), GetCommandQueue(), hwnd, width, height, gSwapChain);
-        CHECK_SUCCESS(success, "Error: Failed to create swap chain!");
+        CHECK_SUCCESS(success, "Error: Failed to create swap chain!\n");
 
         success &= CreateFence(GetDevice(), &gFence);
-        CHECK_SUCCESS(success, "Error: Failed to create fence!");
+        CHECK_SUCCESS(success, "Error: Failed to create fence!\n");
 
         success &= CreateDescriptorHeaps(GetDevice(), &gRTVHeap, &gDSVHeap);
-        CHECK_SUCCESS(success, "Error: Failed to create descriptor heaps!");
+        CHECK_SUCCESS(success, "Error: Failed to create descriptor heaps!\n");
 
         success &= CreateRenderTargetView(GetDevice(), GetSwapChain(), gSwapChainBuffers);
-        CHECK_SUCCESS(success, "Error: Failed to create render target view!");
+        CHECK_SUCCESS(success, "Error: Failed to create render target view!\n");
 
         success &= CreateDepthStencilBuffer(GetDevice(), GetCommandList(), GetCommandQueue(), width, height, &gDepthStencilBuffer);
-        CHECK_SUCCESS(success, "Error: Failed to create depth stencil buffer!");
+        CHECK_SUCCESS(success, "Error: Failed to create depth stencil buffer!\n");
 
         success &= SetViewport(GetCommandList(), 0, 0, width, height, 0.001f, 1000.0f);
-        CHECK_SUCCESS(success, "Error: Failed to set viewport!");
+        CHECK_SUCCESS(success, "Error: Failed to set viewport!\n");
 
         success &= SetScissorRects(GetCommandList(), 0, 0, width, height);
-        CHECK_SUCCESS(success, "Error: Failed to set scissor rects!");
+        CHECK_SUCCESS(success, "Error: Failed to set scissor rects!\n");
 
         // TODO: Move this to the application and generalize it.
         success &= CreateRootSig(GetDevice(), &gRootSig);
-        CHECK_SUCCESS(success, "Error: Failed to create root signature.");
+        CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
 
         success &= LoadShaders(GetDevice(), GetCommandList(), gRootSig, &gPipelineState);
-        CHECK_SUCCESS(success, "Error: Failed to load shaders.");
+        CHECK_SUCCESS(success, "Error: Failed to load shaders.\n");
 
         success &= CreateVertexBuffer(GetDevice(), (float)width / (float)height, &gVertexBufferView, &gVertexBuffer);
-        CHECK_SUCCESS(success, "Error: Failed create vertex buffer.");
+        CHECK_SUCCESS(success, "Error: Failed create vertex buffer.\n");
 
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();
