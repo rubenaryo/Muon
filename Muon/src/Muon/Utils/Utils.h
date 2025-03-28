@@ -9,6 +9,7 @@ Description : Utility functions
 namespace Muon
 {
 	inline void MUON_API Print(const char* str);
+	inline void MUON_API Printf(const char* format, ...);
 }
 
 #endif
