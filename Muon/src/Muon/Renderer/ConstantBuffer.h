@@ -48,6 +48,11 @@ struct ConstantBufferUpdateManager
         *out_packet     = cbp;
     }
 
+    static void Populate(UINT byteSize, UINT slot, EASEL_SHADER_STAGE shaderStage, ConstantBufferBindPacket* out_packet)
+    {
+
+    }
+
     static void MapUnmap(ConstantBufferBindPacket* packet, void* newData, ID3D11DeviceContext* context)
     {
         D3D11_MAPPED_SUBRESOURCE mappedBuffer = {0};

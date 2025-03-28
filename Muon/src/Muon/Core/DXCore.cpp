@@ -381,14 +381,11 @@ namespace Muon
         pDevice->CreateDepthStencilView(*out_depthStencilBuffer, &dsvDesc, DepthStencilView());
 
         // Trnasition from initial -> depth buffer use
+        pCommandList->Reset(GetCommandAllocator(), nullptr);
+
         pCommandList->ResourceBarrier(1,
             &CD3DX12_RESOURCE_BARRIER::Transition(*out_depthStencilBuffer, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-        //hr = pCommandList->Close();
-        //COM_EXCEPT(hr);
-
-        ID3D12CommandList* lists[] = { pCommandList };
-        pCommandQueue->ExecuteCommandLists(_countof(lists), lists);
 
         // TODO: Flush command queue?
 
@@ -495,6 +492,13 @@ namespace Muon
 
         success &= SetScissorRects(GetCommandList(), 0, 0, width, height);
         CHECK_SUCCESS(success, "Error: Failed to set scissor rects!");
+
+        // We've written a bunch of commands, close the list and execute it.
+        hr = GetCommandList()->Close();
+        COM_EXCEPT(hr);
+
+        ID3D12CommandList* lists[] = { GetCommandList() };
+        GetCommandQueue()->ExecuteCommandLists(_countof(lists), lists);
     
         return success;
     }

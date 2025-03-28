@@ -13,6 +13,7 @@ Description : Implementation of Game.h
 #include <Muon/Renderer/LightingManager.h>
 #include <Muon/Renderer/ResourceCodex.h>
 
+#define USE_DX11 0
 
 namespace Core
 {
@@ -83,7 +84,7 @@ void Game::Frame()
 void Game::Update(StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
-
+#if USE_DX11
     // Update the input, passing in the camera so it will update its internal information
     mpInput->Frame(elapsedTime, mpCamera);
 
@@ -100,6 +101,7 @@ void Game::Update(StepTimer const& timer)
     
     // Update the renderer's view matrices, lighting information.
     mEntityRenderer.Update(context, elapsedTime);
+#endif
 }
 
 void Game::Render()
@@ -109,6 +111,8 @@ void Game::Render()
     {
         return;
     }
+
+#if USE_DX11
     auto context = mDeviceResources.GetContext();
 
     // Clear the necessary backbuffer
@@ -125,6 +129,8 @@ void Game::Render()
 
     // Show the new frame
     mDeviceResources.Present();
+
+#endif
 }
 
 void Game::CreateDeviceDependentResources()
