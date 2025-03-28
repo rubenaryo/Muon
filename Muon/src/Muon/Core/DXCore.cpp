@@ -2,6 +2,9 @@
 Ruben Young (rubenaryo@gmail.com)
 Date : 2025/3
 Description : Protocol and device resources for DX12
+...
+Most of this initialization code is adapted from https://github.com/microsoft/DirectX-Graphics-Samples
+or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 ----------------------------------------------*/
 #include <Muon.h>
 #include <Muon/Utils/Utils.h>
@@ -264,11 +267,37 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateDescriptorHeaps(ID3D12Device* pDevice);
+    bool CreateDescriptorHeaps(ID3D12Device* pDevice, ID3D12DescriptorHeap** out_rtv, ID3D12DescriptorHeap** out_dsv)
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
+        rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
+        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        rtvHeapDesc.NodeMask = 0;
+
+        HRESULT hr = pDevice->CreateDescriptorHeap(
+            &rtvHeapDesc, IID_PPV_ARGS(out_rtv));
+        COM_EXCEPT(hr);
+
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
+        dsvHeapDesc.NumDescriptors = 1;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        dsvHeapDesc.NodeMask = 0;
+        hr = pDevice->CreateDescriptorHeap(
+            &dsvHeapDesc, IID_PPV_ARGS(out_dsv));
+        COM_EXCEPT(hr);
+
+        return SUCCEEDED(hr);
+    }
+
+    bool CreateRenderTargetView(ID3D12Device* pDevice)
+    {
+        // TODO
+        return true;
+    }
     /////////////////////////////////////////////////////////////////////
 
-    // Most of this initialization code is adapted from https://github.com/microsoft/DirectX-Graphics-Samples
-    // or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna 
     bool Initialize(HWND hwnd, int width, int height)
     {
         using Microsoft::WRL::ComPtr;
