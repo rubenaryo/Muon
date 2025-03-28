@@ -11,8 +11,8 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 #include <Muon/Core/DXCore.h>
 #include <Muon/Renderer/ThrowMacros.h> // TODO: move to Core?
 
-#include <d3d12.h>
 #include <d3dx12.h>
+#include <d3d12.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <stdint.h>

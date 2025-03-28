@@ -98,7 +98,8 @@ project "IsoDungeon"
 
     includedirs
     {
-        "Muon/src"
+        "Muon/src",
+		"external/**/include/"
     }
 
     links

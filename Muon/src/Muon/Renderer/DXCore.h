@@ -7,6 +7,8 @@ Description : Standard includes/ macros for a DirectX 11 app
 #define DXCORE_H
 
 // DirectX necessary includes
+#include <d3dx12.h>
+#include <d3d12.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <d3d11_2.h>
