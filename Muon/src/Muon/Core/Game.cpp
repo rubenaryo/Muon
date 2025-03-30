@@ -67,6 +67,8 @@ bool Game::InitDX12(HWND window, int width, int height)
 {
     bool success = Muon::Initialize(window, width, height);
 
+    mpCamera = new Renderer::Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
+
     return success;
 }
 
@@ -86,15 +88,15 @@ void Game::Frame()
 void Game::Update(StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
+    mpInput->Frame(elapsedTime, mpCamera);
+    mpCamera->UpdateView();
 #if USE_DX11
     // Update the input, passing in the camera so it will update its internal information
-    mpInput->Frame(elapsedTime, mpCamera);
 
     auto context = mDeviceResources.GetContext();
 
     // Update the camera's view matrix
 
-    mpCamera->UpdateView(context);
 
     // Update the lights (if needed)
     DirectX::XMFLOAT3A camPos;

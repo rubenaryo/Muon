@@ -29,6 +29,8 @@ void UploadBuffer::Create(const wchar_t* name, size_t size)
 
 	TryDestroy();
 
+	mBufferSize = size;
+
 	D3D12_HEAP_PROPERTIES HeapProps;
 	HeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
 	HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;

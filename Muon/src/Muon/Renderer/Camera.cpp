@@ -49,9 +49,9 @@ Camera::Camera(float x, float y, float z, float aspectRatio, float nearPlane, fl
     ConstantBufferUpdateManager::Bind(&mBindPacket, context);
 }
 
-Camera::Camera(XMFLOAT3& pos, float aspectRatio, float near, float far) :
-    mNear(near),
-    mFar(far),
+Camera::Camera(XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane) :
+    mNear(nearPlane),
+    mFar(farPlane),
     mSensitivity(0.0f),
     mForward(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f)),
     mUp(DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)),
