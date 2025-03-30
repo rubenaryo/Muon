@@ -8,7 +8,25 @@
 
 namespace Renderer {
 
-struct ConstantBufferBindPacket
+/* How to organize a cbuffer :
+    Creation:
+    - Allocate one large ID3D12Resource to hold all cbuffers needed of a given type (ie: n objects need n x size space in one go)
+    - Device->CreateCommittedResource
+    - 
+    
+*/
+
+// Per frame : This is a cbuffer
+// - camera viewproj
+// Per drawable "class" ("all phong cubes") This is a PSO
+// - Material (VS/PS/params)
+// - Input Layout (comes from vs)
+// - Optional RS/DSS/BS (ie skybox)
+// - ----------------------
+// Per drawable : This is a cbuffer
+// - model matrix
+
+struct ConstantBufferBindPacket_DX11
 {
     ID3D11Buffer* Buffer;
     UINT          ByteSize;
@@ -16,6 +34,7 @@ struct ConstantBufferBindPacket
     UINT          ShaderStage; // EASEL_SHADER_STAGE type
     BOOL          Stale;
 };
+typedef ConstantBufferBindPacket_DX11 ConstantBufferBindPacket;
 
 typedef void (*BindFunction)(ID3D11DeviceContext* context, UINT slot, ID3D11Buffer*const* cbuffer);
 static const BindFunction kBindFunctions[(UINT)EASEL_SHADER_STAGE::ESS_COUNT] = 
