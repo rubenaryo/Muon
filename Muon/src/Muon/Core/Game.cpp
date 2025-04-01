@@ -12,6 +12,7 @@ Description : Implementation of Game.h
 #include <Muon/Renderer/COMException.h>
 #include <Muon/Renderer/LightingManager.h>
 #include <Muon/Renderer/ResourceCodex.h>
+#include <Muon/Renderer/Shader.h>
 
 #define USE_DX11 0
 
@@ -68,6 +69,9 @@ bool Game::InitDX12(HWND window, int width, int height)
     bool success = Muon::Initialize(window, width, height);
 
     mpCamera = new Renderer::Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
+
+    static const std::wstring VS_PATH = SHADERPATHW "SimpleVS.cso";
+    Renderer::VertexShader_DX12 simpleVS(VS_PATH.c_str());
 
     return success;
 }

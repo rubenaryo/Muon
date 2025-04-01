@@ -9,6 +9,9 @@ Description : Wrapper for Vertex/Pixel/other shader code
 #include "DXCore.h"
 #include "ThrowMacros.h"
 
+#include <vector>
+#include <wrl/client.h>
+
 namespace Renderer {
 
 #pragma region VertexShader Stuff
@@ -43,6 +46,19 @@ struct VertexShader
     VertexBufferDescription VertexDesc;
     VertexBufferDescription InstanceDesc; // Note: The allocated memory inside this one is contiguous with VertexDesc, so no additional free's are required.
     BOOL Instanced;
+};
+
+struct VertexShader_DX12
+{
+    VertexShader_DX12(const wchar_t* path);
+    ~VertexShader_DX12();
+
+    std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
+    Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
+    VertexBufferDescription VertexDesc;
+    VertexBufferDescription InstanceDesc; // Note: The allocated memory inside this one is contiguous with VertexDesc, so no additional free's are required.
+    BOOL Initialized = false;
+    BOOL Instanced = false;
 };
 
 struct PixelShader

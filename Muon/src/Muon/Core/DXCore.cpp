@@ -176,7 +176,7 @@ namespace Muon
                 continue;
 
             // Can create a D3D12 device?
-            if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(pTempDevice.GetAddressOf()))))
+            if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(pTempDevice.GetAddressOf()))))
             {
                 Muon::Print("Error: Failed to create device!\n");
                 continue;
